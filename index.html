@@ -65,6 +65,13 @@
     .history-meta{display:grid;gap:4px;font-size:.9rem}
     .history-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .empty{padding:14px;border-radius:16px;background:var(--surface2);border:1px dashed var(--border)}
+
+    .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat-card{padding:12px;border-radius:16px;background:var(--surface2);border:1px solid var(--border)}
+    .stat-label{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .stat-value{font-size:1.35rem;font-weight:700;margin-top:6px}
+    .exercise-stats{display:grid;gap:8px}
+    .exercise-stat{padding:12px;border-radius:16px;background:var(--surface2);border:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
     @media (min-width:700px){
       .app{padding:16px;gap:16px}
       .section{padding:16px}
@@ -90,17 +97,37 @@
           <button type="button" class="btn btn-secondary" id="themeBtn">Theme</button>
           <button type="button" class="btn btn-secondary" id="reloadBtn">Reload</button>
         </div>
+
+      <div id="analyticsView" class="view">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0;font-size:1.08rem;">Analytics</h2>
+            <div class="hint" style="margin-top:4px;">Quick trends based on saved workout history.</div>
+          </div>
+        </div>
+        <div class="analytics-grid" id="analyticsGrid">
+          <div class="stat-card"><div class="stat-label">Saved workouts</div><div class="stat-value" id="statWorkouts">0</div></div>
+          <div class="stat-card"><div class="stat-label">This week</div><div class="stat-value" id="statThisWeek">0</div></div>
+          <div class="stat-card"><div class="stat-label">Unique workout days</div><div class="stat-value" id="statDayTypes">0</div></div>
+          <div class="stat-card"><div class="stat-label">Logged exercises</div><div class="stat-value" id="statExercises">0</div></div>
+        </div>
+        <div class="stack">
+          <div>
+            <h3 style="margin:0;font-size:1rem;">Most logged exercises</h3>
+            <div class="hint" style="margin-top:4px;">Top movements based on history entries.</div>
+          </div>
+          <div class="exercise-stats" id="exerciseStats"></div>
+        </div>
       </div>
-      <div class="install-note" style="margin-top:12px;padding:12px;border-radius:14px;background:var(--primary-soft);">
-        <div style="font-weight:700;">iPhone setup</div>
-        <div class="small" style="margin-top:4px;">Open in Safari, tap Share, then Add to Home Screen. iPhone web apps are commonly added this way and can run in standalone mode when configured with the right web app metadata.[web:47][web:49][web:52][code_file:62]</div>
+
       </div>
     </section>
 
     <section class="card section stack">
-      <div class="tabs">
+      <div class="tabs" style="grid-template-columns:1fr 1fr 1fr;">
         <button type="button" class="btn btn-secondary tab-btn active" data-view-btn="logView">Log</button>
         <button type="button" class="btn btn-secondary tab-btn" data-view-btn="historyView">History</button>
+        <button type="button" class="btn btn-secondary tab-btn" data-view-btn="analyticsView">Analytics</button>
       </div>
 
       <div id="logView" class="view active">
@@ -259,6 +286,7 @@
     function saveHistory(history) {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
       renderHistory();
+      renderAnalytics();
     }
 
     function getCurrentData() {
@@ -305,6 +333,7 @@
       history.unshift(entry);
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
       renderHistory();
+      renderAnalytics();
     }
 
     function exportFile(filename, content, type) {
@@ -364,6 +393,42 @@
       });
     }
 
+
+    function renderAnalytics() {
+      const history = getHistory();
+      const workouts = history.length;
+      const now = new Date();
+      const weekAgo = new Date(now);
+      weekAgo.setDate(now.getDate() - 7);
+      const thisWeek = history.filter(h => h.updatedAt && new Date(h.updatedAt) >= weekAgo).length;
+      const uniqueDays = new Set(history.map(h => h.day).filter(Boolean)).size;
+      const exerciseEntries = history.reduce((sum, h) => sum + ((h.exercises || []).filter(ex => Object.values(ex).some(Boolean)).length), 0);
+      document.getElementById('statWorkouts').textContent = String(workouts);
+      document.getElementById('statThisWeek').textContent = String(thisWeek);
+      document.getElementById('statDayTypes').textContent = String(uniqueDays);
+      document.getElementById('statExercises').textContent = String(exerciseEntries);
+
+      const counts = {};
+      history.forEach(h => (h.exercises || []).forEach(ex => {
+        const name = (ex.name || '').trim();
+        if (!name) return;
+        counts[name] = (counts[name] || 0) + 1;
+      }));
+      const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,8);
+      const wrap = document.getElementById('exerciseStats');
+      wrap.innerHTML = '';
+      if (!top.length) {
+        wrap.innerHTML = '<div class="empty"><strong>No exercise analytics yet.</strong><div class="small" style="margin-top:6px;">Save a few workouts to history and your top exercises will show here.</div></div>';
+        return;
+      }
+      top.forEach(([name,count], idx) => {
+        const row = document.createElement('div');
+        row.className = 'exercise-stat';
+        row.innerHTML = `<div><div style="font-weight:700;">${esc(name)}</div><div class="small">Rank #${idx+1}</div></div><div style="font-weight:700;">${count} logs</div>`;
+        wrap.appendChild(row);
+      });
+    }
+
     function renderHistory() {
       const history = getHistory();
       historyList.innerHTML = '';
@@ -410,7 +475,7 @@
       historyList.querySelectorAll('.delete-history').forEach(btn => btn.addEventListener('click', e => {
         const history = getHistory();
         history.splice(Number(e.currentTarget.dataset.index), 1);
-        saveHistory(history);
+        saveHistory(history); renderAnalytics();
       }));
     }
 
@@ -455,6 +520,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       }
       renderHistory();
+      renderAnalytics();
       saveStatus.textContent = 'Imported data from file.';
       e.target.value = '';
     });
@@ -467,6 +533,7 @@
       saveCurrent();
     }
     renderHistory();
+    renderAnalytics();
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
