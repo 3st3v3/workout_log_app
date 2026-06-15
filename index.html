@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Workout Log</title>
+  <meta name="theme-color" content="#01696f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Workout Log" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --bg:#f7f6f2; --surface:#fbfbf9; --surface2:#f1efea; --border:#d7d3cb; --text:#28251d; --muted:#6e6b66;
+      --primary:#01696f; --primary-soft:#d7eceb; --danger:#a13544; --shadow:0 10px 24px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"] {
+      --bg:#171614; --surface:#1c1b19; --surface2:#252320; --border:#393836; --text:#ece8df; --muted:#a29e97;
+      --primary:#4f98a3; --primary-soft:#23383a; --danger:#dd6974; --shadow:0 10px 24px rgba(0,0,0,.24);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+    body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:0 auto;padding:12px;display:grid;gap:12px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+    .section{padding:14px}
+    .hero-title{font-size:1.35rem;font-weight:700;line-height:1.15;margin:0}
+    .sub,.small,.hint,.status{color:var(--muted)}
+    .sub{font-size:.94rem;margin-top:6px}
+    .small{font-size:.8rem}
+    .hint{font-size:.83rem}
+    .status{font-size:.86rem}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font-size:.78rem;font-weight:700;margin-bottom:8px}
+    .topbar{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .top-actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:none;border-radius:14px;padding:14px;min-height:46px;font-weight:700}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+    .field,.stack{display:grid;gap:12px}
+    .field{gap:6px}
+    label{font-size:.82rem;color:var(--muted);font-weight:600}
+    input,select,textarea{width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);background:var(--surface2);color:var(--text)}
+    textarea{min-height:92px;resize:vertical}
+    .row-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .split-grid,.history-list{display:grid;grid-template-columns:1fr;gap:8px}
+    .chip,.history-card,.exercise-card{padding:12px;border-radius:16px;background:var(--surface2);border:1px solid var(--border)}
+    .chip.active{background:var(--primary-soft);border-color:var(--primary);font-weight:700}
+    .exercise-list{display:grid;gap:10px}
+    .exercise-card{display:grid;gap:10px}
+    .exercise-head,.history-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .sets-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .footer-actions{position:sticky;bottom:0;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 72%,transparent)}
+    .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .action-grid .btn-primary{grid-column:1 / -1}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .view{display:none}
+    .view.active{display:grid;gap:12px}
+    .history-meta{display:grid;gap:4px;font-size:.9rem}
+    .history-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .empty{padding:14px;border-radius:16px;background:var(--surface2);border:1px dashed var(--border)}
+    @media (min-width:700px){
+      .app{padding:16px;gap:16px}
+      .section{padding:16px}
+      .split-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .action-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+      .action-grid .btn-primary{grid-column:auto}
+      .history-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .sets-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    }
+    @media print {.footer-actions,.top-actions,.install-note{display:none} body{background:#fff} .card{box-shadow:none}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card section">
+      <div class="topbar">
+        <div>
+          <div class="pill">Workout Log</div>
+          <h1 class="hero-title">Mobile workout logger</h1>
+          <div class="sub">Fast logging, device save, history, and file export.</div>
+        </div>
+        <div class="top-actions">
+          <button type="button" class="btn btn-secondary" id="themeBtn">Theme</button>
+          <button type="button" class="btn btn-secondary" id="reloadBtn">Reload</button>
+        </div>
+      </div>
+      <div class="install-note" style="margin-top:12px;padding:12px;border-radius:14px;background:var(--primary-soft);">
+        <div style="font-weight:700;">iPhone setup</div>
+        <div class="small" style="margin-top:4px;">Open in Safari, tap Share, then Add to Home Screen. iPhone web apps are commonly added this way and can run in standalone mode when configured with the right web app metadata.[web:47][web:49][web:52][code_file:62]</div>
+      </div>
+    </section>
+
+    <section class="card section stack">
+      <div class="tabs">
+        <button type="button" class="btn btn-secondary tab-btn active" data-view-btn="logView">Log</button>
+        <button type="button" class="btn btn-secondary tab-btn" data-view-btn="historyView">History</button>
+      </div>
+
+      <div id="logView" class="view active">
+        <section class="stack">
+          <div>
+            <h2 style="margin:0;font-size:1.08rem;">Today</h2>
+            <div class="hint" style="margin-top:4px;">Pick the day and log the session as you go.</div>
+          </div>
+          <div class="row-2">
+            <div class="field"><label for="date">Date</label><input id="date" type="date"></div>
+            <div class="field"><label for="bodyweight">Bodyweight</label><input id="bodyweight" placeholder="182 lb"></div>
+          </div>
+          <div class="row-2">
+            <div class="field"><label for="energy">Energy</label><input id="energy" placeholder="good / average / tired"></div>
+            <div class="field"><label for="daySelect">Workout day</label>
+              <select id="daySelect">
+                <option>Day 1 – Delts & Arms</option>
+                <option>Day 2 – Heavy Legs & Core</option>
+                <option>Day 3 – Rest</option>
+                <option>Day 4 – Chest & Biceps</option>
+                <option>Day 5 – Delts & Core</option>
+                <option>Day 6 – Back & Triceps</option>
+                <option>Day 7 – Light Legs & Core</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="stack">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0;font-size:1.08rem;">Split</h2>
+              <div class="hint" style="margin-top:4px;">Current day is highlighted below.</div>
+            </div>
+            <div class="status" id="saveStatus">Stored on this device.</div>
+          </div>
+          <div class="split-grid" id="splitGrid">
+            <div class="chip active">Day 1 – Delts & Arms</div>
+            <div class="chip">Day 2 – Heavy Legs & Core</div>
+            <div class="chip">Day 3 – Rest</div>
+            <div class="chip">Day 4 – Chest & Biceps</div>
+            <div class="chip">Day 5 – Delts & Core</div>
+            <div class="chip">Day 6 – Back & Triceps</div>
+            <div class="chip">Day 7 – Light Legs & Core</div>
+          </div>
+        </section>
+
+        <section class="stack">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0;font-size:1.08rem;">Exercises</h2>
+              <div class="hint" style="margin-top:4px;">Each exercise is its own mobile card so logging stays simple on iPhone.[code_file:64]</div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="addRowBtn">Add exercise</button>
+          </div>
+          <div class="exercise-list" id="exerciseList"></div>
+          <div class="field">
+            <label for="notes">Session notes</label>
+            <textarea id="notes" placeholder="What felt strong, what to improve next time, any PRs..."></textarea>
+          </div>
+        </section>
+      </div>
+
+      <div id="historyView" class="view">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0;font-size:1.08rem;">History</h2>
+            <div class="hint" style="margin-top:4px;">Saved sessions stored on this device.</div>
+          </div>
+          <button type="button" class="btn btn-secondary" id="clearHistoryBtn">Clear history</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </section>
+
+    <div class="footer-actions">
+      <section class="card section stack">
+        <div class="action-grid">
+          <button type="button" class="btn btn-primary" id="saveBtn">Save to history</button>
+          <button type="button" class="btn btn-secondary" id="exportBtn">Export JSON</button>
+          <button type="button" class="btn btn-secondary" id="exportCsvBtn">Export CSV</button>
+          <button type="button" class="btn btn-secondary" id="importBtn">Import JSON</button>
+          <button type="button" class="btn btn-secondary" id="clearBtn">Clear log</button>
+        </div>
+        <input id="importFile" type="file" accept="application/json" style="display:none">
+        <div class="small">The app now includes an in-app history view, while still keeping export and import options for backup files.[code_file:64]</div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'workout-log-current-v3';
+    const HISTORY_KEY = 'workout-log-history-v3';
+    const splitGrid = [...document.querySelectorAll('#splitGrid .chip')];
+    const daySelect = document.getElementById('daySelect');
+    const exerciseList = document.getElementById('exerciseList');
+    const saveStatus = document.getElementById('saveStatus');
+    const historyList = document.getElementById('historyList');
+
+    function esc(value='') {
+      return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    }
+
+    function makeExerciseCard(data = {}) {
+      const div = document.createElement('div');
+      div.className = 'exercise-card';
+      div.innerHTML = `
+        <div class="exercise-head">
+          <strong>Exercise</strong>
+          <button type="button" class="btn btn-secondary remove-exercise" style="padding:10px 12px;min-height:auto;">Remove</button>
+        </div>
+        <div class="field"><label>Exercise name</label><input class="ex-name" placeholder="Squat" value="${esc(data.name || '')}"></div>
+        <div class="sets-grid">
+          <div class="field"><label>Set 1</label><input class="ex-s1" placeholder="135 x 8" value="${esc(data.s1 || '')}"></div>
+          <div class="field"><label>Set 2</label><input class="ex-s2" placeholder="135 x 8" value="${esc(data.s2 || '')}"></div>
+          <div class="field"><label>Set 3</label><input class="ex-s3" placeholder="135 x 8" value="${esc(data.s3 || '')}"></div>
+          <div class="field"><label>Set 4</label><input class="ex-s4" placeholder="135 x 8" value="${esc(data.s4 || '')}"></div>
+        </div>
+        <div class="field"><label>Notes</label><input class="ex-notes" placeholder="RPE, cue, or form note" value="${esc(data.notes || '')}"></div>
+      `;
+      div.querySelector('.remove-exercise').addEventListener('click', () => {
+        div.remove();
+        if (!exerciseList.children.length) ensureExerciseCards(1);
+        bindAutosave();
+        saveCurrent();
+      });
+      exerciseList.appendChild(div);
+    }
+
+    function ensureExerciseCards(count = 4) {
+      if (!exerciseList.children.length) {
+        for (let i = 0; i < count; i++) makeExerciseCard();
+      }
+    }
+
+    function collectExercises() {
+      return [...exerciseList.querySelectorAll('.exercise-card')].map(card => ({
+        name: card.querySelector('.ex-name').value.trim(),
+        s1: card.querySelector('.ex-s1').value.trim(),
+        s2: card.querySelector('.ex-s2').value.trim(),
+        s3: card.querySelector('.ex-s3').value.trim(),
+        s4: card.querySelector('.ex-s4').value.trim(),
+        notes: card.querySelector('.ex-notes').value.trim(),
+      })).filter(r => Object.values(r).some(Boolean));
+    }
+
+    function highlightDay() {
+      splitGrid.forEach(c => c.classList.remove('active'));
+      if (splitGrid[daySelect.selectedIndex]) splitGrid[daySelect.selectedIndex].classList.add('active');
+    }
+
+    function getHistory() {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    }
+
+    function saveHistory(history) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderHistory();
+    }
+
+    function getCurrentData() {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: document.getElementById('date').value,
+        bodyweight: document.getElementById('bodyweight').value,
+        energy: document.getElementById('energy').value,
+        day: daySelect.value,
+        notes: document.getElementById('notes').value,
+        exercises: collectExercises(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function setData(data = {}) {
+      document.getElementById('date').value = data.date || '';
+      document.getElementById('bodyweight').value = data.bodyweight || '';
+      document.getElementById('energy').value = data.energy || '';
+      daySelect.value = data.day || daySelect.options[0].value;
+      document.getElementById('notes').value = data.notes || '';
+      exerciseList.innerHTML = '';
+      if (data.exercises && data.exercises.length) data.exercises.forEach(makeExerciseCard); else ensureExerciseCards();
+      highlightDay();
+      bindAutosave();
+    }
+
+    function saveCurrent() {
+      const current = {
+        date: document.getElementById('date').value,
+        bodyweight: document.getElementById('bodyweight').value,
+        energy: document.getElementById('energy').value,
+        day: daySelect.value,
+        notes: document.getElementById('notes').value,
+        exercises: collectExercises(),
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+      saveStatus.textContent = 'Draft saved on this device at ' + new Date().toLocaleTimeString();
+    }
+
+    function addToHistory(entry) {
+      const history = getHistory();
+      history.unshift(entry);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderHistory();
+    }
+
+    function exportFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+    }
+
+    function toCsvRow(arr) {
+      return arr.map(v => '"' + String(v ?? '').replaceAll('"', '""') + '"').join(',');
+    }
+
+    function exportCsv() {
+      const history = getHistory();
+      const rows = [['date','day','bodyweight','energy','exercise','set1','set2','set3','set4','exercise_notes','session_notes','updated_at']];
+      history.forEach(d => {
+        if (!d.exercises || d.exercises.length === 0) {
+          rows.push([d.date,d.day,d.bodyweight,d.energy,'','','','','','',d.notes,d.updatedAt]);
+        } else {
+          d.exercises.forEach(ex => rows.push([d.date,d.day,d.bodyweight,d.energy,ex.name,ex.s1,ex.s2,ex.s3,ex.s4,ex.notes,d.notes,d.updatedAt]));
+        }
+      });
+      exportFile('workout-history.csv', rows.map(toCsvRow).join('\n'), 'text/csv');
+    }
+
+    function exportJson() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        current: JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'),
+        history: getHistory()
+      };
+      exportFile('workout-history-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+    }
+
+    function clearCurrent() {
+      localStorage.removeItem(STORAGE_KEY);
+      setData({});
+      document.getElementById('date').value = new Date().toISOString().slice(0,10);
+      saveStatus.textContent = 'Current log cleared.';
+    }
+
+    function bindAutosave() {
+      document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.dataset.bound === '1') return;
+        el.dataset.bound = '1';
+        el.addEventListener('change', saveCurrent);
+        el.addEventListener('input', () => {
+          clearTimeout(window.__autosaveTimer);
+          window.__autosaveTimer = setTimeout(saveCurrent, 300);
+        });
+      });
+    }
+
+    function renderHistory() {
+      const history = getHistory();
+      historyList.innerHTML = '';
+      if (!history.length) {
+        historyList.innerHTML = '<div class="empty"><strong>No saved workouts yet.</strong><div class="small" style="margin-top:6px;">Tap Save to history after a workout and it will show up here.</div></div>';
+        return;
+      }
+      history.forEach((entry, index) => {
+        const div = document.createElement('div');
+        div.className = 'history-card';
+        const exerciseCount = entry.exercises?.filter(ex => Object.values(ex).some(Boolean)).length || 0;
+        div.innerHTML = `
+          <div class="history-head">
+            <strong>${esc(entry.day || 'Workout')}</strong>
+            <span class="small">${esc(entry.date || '')}</span>
+          </div>
+          <div class="history-meta">
+            <div><strong>Bodyweight:</strong> ${esc(entry.bodyweight || '-')}</div>
+            <div><strong>Energy:</strong> ${esc(entry.energy || '-')}</div>
+            <div><strong>Exercises:</strong> ${exerciseCount}</div>
+          </div>
+          <div class="small" style="margin-top:8px;">${esc(entry.notes || 'No notes')}</div>
+          <div class="history-actions">
+            <button type="button" class="btn btn-secondary load-history" data-index="${index}" style="padding:10px 12px;min-height:auto;">Load</button>
+            <button type="button" class="btn btn-secondary export-one" data-index="${index}" style="padding:10px 12px;min-height:auto;">Export</button>
+            <button type="button" class="btn btn-secondary delete-history" data-index="${index}" style="padding:10px 12px;min-height:auto;">Delete</button>
+          </div>
+        `;
+        historyList.appendChild(div);
+      });
+      historyList.querySelectorAll('.load-history').forEach(btn => btn.addEventListener('click', e => {
+        const entry = getHistory()[Number(e.currentTarget.dataset.index)];
+        if (!entry) return;
+        setData(entry);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entry));
+        showView('logView');
+        saveStatus.textContent = 'Loaded workout from history.';
+      }));
+      historyList.querySelectorAll('.export-one').forEach(btn => btn.addEventListener('click', e => {
+        const entry = getHistory()[Number(e.currentTarget.dataset.index)];
+        if (!entry) return;
+        exportFile(`workout-${entry.date || 'session'}.json`, JSON.stringify(entry, null, 2), 'application/json');
+      }));
+      historyList.querySelectorAll('.delete-history').forEach(btn => btn.addEventListener('click', e => {
+        const history = getHistory();
+        history.splice(Number(e.currentTarget.dataset.index), 1);
+        saveHistory(history);
+      }));
+    }
+
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.viewBtn === id));
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.viewBtn)));
+    document.getElementById('addRowBtn').addEventListener('click', () => { makeExerciseCard(); bindAutosave(); saveCurrent(); });
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const current = getCurrentData();
+      addToHistory(current);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+      saveStatus.textContent = 'Saved to history at ' + new Date().toLocaleTimeString();
+      showView('historyView');
+    });
+    document.getElementById('exportBtn').addEventListener('click', exportJson);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+    document.getElementById('clearBtn').addEventListener('click', clearCurrent);
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); });
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    document.getElementById('reloadBtn').addEventListener('click', () => window.location.reload());
+    daySelect.addEventListener('change', () => { highlightDay(); saveCurrent(); });
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('importFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.current) {
+        setData(data.current);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.current));
+        if (Array.isArray(data.history)) localStorage.setItem(HISTORY_KEY, JSON.stringify(data.history));
+      } else if (Array.isArray(data.history)) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(data.history));
+      } else {
+        setData(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+      renderHistory();
+      saveStatus.textContent = 'Imported data from file.';
+      e.target.value = '';
+    });
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) setData(JSON.parse(saved));
+    else {
+      setData({});
+      document.getElementById('date').value = new Date().toISOString().slice(0,10);
+      saveCurrent();
+    }
+    renderHistory();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
